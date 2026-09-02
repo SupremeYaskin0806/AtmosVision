@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtmosVision</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="https://unpkg.com/globe.gl"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">AtmosVision</div>
+        <ul class="nav-links">
+            <li><a href="#home">Activity & Insights</a></li>
+            <li><a href="#radar">Radar & Map</a></li>
+            <li><a href="#globe">3D Globe</a></li>
+            <li><a href="#services">Services</a></li>
+        </ul>
+        <div class="nav-buttons">
+            <button class="login-btn">Login</button>
+            <button class="chat-btn">Chat with us</button>
+        </div>
+    </nav>
+
+    <section class="hero-section" id="home">
+        <div class="hero-content">
+            <h1 class="quote">"Forecasting the Future of Weather, One Chat at a Time."</h1>
+            <p>Empowering you with real-time insights across Indian states and global cities.</p>
+            <button class="ai-btn" id="ai-modal-btn">Access AtmosVision AI</button>
+            
+            <div class="weather-widget">
+                <input type="text" id="city-input" placeholder="Enter state or city name...">
+                <button id="search-btn">Forecast</button>
+                <div id="weather-result" class="weather-result"></div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="radar-section" id="radar">
+        <div class="split-screen">
+            <div class="map-container">
+                <div id="weather-animation-box" class="weather-box default"></div>
+                
+                <div class="map-controls">
+                    <button id="btn-locate" title="Fly to My Location">📍</button>
+                    <button id="btn-radar" title="Toggle Live Rain Radar">🌧️</button>
+                </div>
+                
+                <div id="interactive-map"></div>
+            </div>
+            
+            <div class="map-chat-container">
+                <div class="chat-header">
+                    <h3>Map Intelligence Agent</h3>
+                </div>
+                <div class="chat-history" id="map-chat-history"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="map-chat-input" placeholder="E.g., 'What's the weather like for a drive to the mountains?'">
+                    <button id="map-send-btn">Ask</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="globe-section" id="globe">
+        <h2>🌍 3D Global Climate Explorer</h2>
+        <p>Rotate the Earth in 3D space. Click anywhere on the latitude/longitude grid to scan atmospheric conditions.</p>
+        <div id="globe-viz-container"></div>
+    </section>
+
+    <section class="services-section" id="services">
+        <h2 class="section-title">Our AI Weather Services</h2>
+        <div class="services-grid">
+            <div class="service-card" id="srv-disaster">
+                <h3>🚨 Disaster & Hazard Alerts</h3>
+                <p>Real-time warnings for extreme weather and natural disasters.</p>
+            </div>
+            <div class="service-card" id="srv-trip">
+                <h3>🚗 AI Trip & Route Optimizer</h3>
+                <p>Input your route and travel dates. We predict road conditions, severe weather risks, and the safest times to drive.</p>
+            </div>
+            <div class="service-card" id="srv-agri">
+                <h3>🌾 Agri-Weather Intelligence</h3>
+                <p>Crop-specific forecasts to help farmers plan harvests, schedule irrigation, and avoid sudden frost or drought risks.</p>
+            </div>
+            <div class="service-card" id="srv-event">
+                <h3>🎪 Event Risk Management</h3>
+                <p>Calculate precise rain probabilities for outdoor events, weddings, and sports matches using historical and live data.</p>
+            </div>
+            <div class="service-card" id="srv-aero">
+                <h3>✈️ Aviation & Marine</h3>
+                <p>Advanced meteorological metrics on wind shear, visibility, pressure changes, and wave heights for pilots and sailors.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="chat-modal" id="chat-modal" style="display: none;">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3 id="chat-modal-title">AtmosVision AI</h3>
+                <button id="close-chat">&times;</button>
+            </div>
+            <div class="chat-history" id="chat-history"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Ask about the weather...">
+                <button id="send-chat">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <section class="about-section" id="about">
+        <div class="about-content">
+            <h2>About Us & Our Vision</h2>
+            <p>AtmosVision was built to bridge the gap between complex meteorological data and everyday life. Our vision is to provide a platform where planning your day is as simple as talking to an AI. We believe weather forecasting should be proactive, conversational, and highly accurate.</p>
+        </div>
+        <div class="about-video">
+            <video autoplay loop muted>
+                <source src="{{ url_for('static', filename='videos/nature.mp4') }}" type="video/mp4">
+            </video>
+        </div>
+    </section>
+
+    <section class="faq-section" id="faq">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-container">
+            <div class="faq-item">
+                <h3 class="faq-question">How accurate is the forecast?</h3>
+                <p class="faq-answer">We aggregate data from leading global meteorological sources to ensure the highest accuracy possible.</p>
+            </div>
+            <div class="faq-item">
+                <h3 class="faq-question">Can I check the weather for small towns in India?</h3>
+                <p class="faq-answer">Yes! Our database covers major states, districts, and tier-2/tier-3 cities globally.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-section" id="contact">
+        <div class="footer-content">
+            <h2>AtmosVision: Our Vision & Idea</h2>
+            <p>Building the next generation of weather intelligence.</p>
+            <p>Email us: <a href="mailto:support@AtmosVision.com">support@AtmosVision.com</a></p>
+        </div>
+        <div class="footer-extras">
+            <p>&copy; 2026 AtmosVision. All rights reserved.</p>
+            <p><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
