@@ -337,3 +337,29 @@ body {
 .footer-extras { margin-top: 2rem; border-top: 1px solid #333; padding-top: 1.5rem; font-size: 0.9rem; }
 .footer-extras a { color: #ccc; text-decoration: none; margin: 0 15px; transition: color 0.3s; }
 .footer-extras a:hover { color: white; }
+
+/* --- MOBILE RESPONSIVE FIXES --- */
+@media (max-width: 768px) {
+    header, nav, .navbar {
+        flex-direction: column !important;
+        text-align: center;
+        padding: 15px;
+    }
+    nav a, .navbar a {
+        display: block;
+        margin: 10px 0;
+    }
+    .container, .hero-section, .map-container {
+        width: 95% !important;
+        margin: 0 auto;
+        padding: 10px;
+    }
+    form, .search-bar {
+        display: flex;
+        flex-direction: column;
+    }
+    form input, form button {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
