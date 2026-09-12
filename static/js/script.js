@@ -425,31 +425,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginModal = document.getElementById('login-modal');
     const saveLoginBtn = document.getElementById('save-login-btn');
     const closeLoginBtn = document.getElementById('close-login-btn');
+    
+    // NEW: Tracks if we need to auto-send SOS after login
+    let pendingSOS = false; 
+
+    // NEW: Check on page load. If credentials exist, remember them instantly.
+    if (localStorage.getItem('atmosPhone')) {
+        if(loginBtn) {
+            loginBtn.innerText = "Logged In";
+            loginBtn.style.backgroundColor = "#2ea043";
+        }
+    }
 
     // Open Modal
     if(loginBtn) {
         loginBtn.addEventListener('click', () => {
             loginModal.style.display = 'flex';
-            // Pre-fill if already logged in
             document.getElementById('user-email').value = localStorage.getItem('atmosEmail') || '';
             document.getElementById('user-phone').value = localStorage.getItem('atmosPhone') || '';
         });
     }
 
     // Close Modal
-    closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
+    closeLoginBtn.addEventListener('click', () => {
+        loginModal.style.display = 'none';
+        pendingSOS = false;
+    });
 
-    // Save Credentials
+    // Save Credentials & Auto-Return
     saveLoginBtn.addEventListener('click', () => {
         const email = document.getElementById('user-email').value;
         const phone = document.getElementById('user-phone').value;
+        
         if(email && phone) {
             localStorage.setItem('atmosEmail', email);
             localStorage.setItem('atmosPhone', phone);
-            loginBtn.innerText = "Logged In";
-            loginBtn.style.backgroundColor = "#2ea043";
-            loginModal.style.display = 'none';
-            alert("Credentials saved securely to device for offline access.");
+            
+            if(loginBtn) {
+                loginBtn.innerText = "Logged In";
+                loginBtn.style.backgroundColor = "#2ea043";
+            }
+            
+            // Close modal immediately and show success message
+            loginModal.style.display = 'none'; 
+            alert("Credentials saved securely.");
+            
+            // NEW: If they clicked SOS to get here, auto-trigger the SOS now
+            if (pendingSOS) {
+                pendingSOS = false;
+                document.getElementById('simulate-sos-btn').click();
+            }
         } else {
             alert("Please enter both email and phone number.");
         }
@@ -498,7 +523,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Check if user is logged in
                     const savedPhone = localStorage.getItem('atmosPhone');
                     if(!savedPhone) {
-                        alert("ERROR: Please Login first to register your device for emergency broadcasts.");
+                        alert("Please register your device for emergency broadcasts first.");
+                        pendingSOS = true; // NEW: Tells the modal to fire SOS after saving
                         loginModal.style.display = 'flex';
                         return;
                     }
@@ -509,18 +535,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     transmissionRoute.setStyle({ opacity: 1 });
                     
                     // Compile the emergency text message
-                    const campPhoneNumber = "9337665718"; // <-- PUT YOUR TEST PHONE NUMBER HERE
+                    // 112 (Universal), 100 (Police), 108 (Ambulance), 1078 (NDRF)
+                    const emergencyNumbers = "112,100,108,1078"; 
                     const emergencyText = `SOS ALERT: AtmosVision Mesh. Target Offline. Lat: ${userLat.toFixed(5)}, Lng: ${userLng.toFixed(5)}. Vitals: HR 115bpm, SpO2 89%. Registered Phone: ${savedPhone}. Requesting immediate extraction.`;
                     
                     setTimeout(() => {
                         simBtn.innerText = "SMS Queued to Cellular Radio";
                         
-                        // This forces the phone to open the native text messaging app with the data pre-filled
+                        // Forces the phone to open the native text app addressed to all emergency services
                         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                         if (isIOS) {
-                            window.location.href = `sms:${campPhoneNumber}&body=${encodeURIComponent(emergencyText)}`;
+                            window.location.href = `sms:${emergencyNumbers}&body=${encodeURIComponent(emergencyText)}`;
                         } else {
-                            window.location.href = `sms:${campPhoneNumber}?body=${encodeURIComponent(emergencyText)}`;
+                            window.location.href = `sms:${emergencyNumbers}?body=${encodeURIComponent(emergencyText)}`;
                         }
 
                         // Reset UI
