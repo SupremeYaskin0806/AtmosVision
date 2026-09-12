@@ -519,15 +519,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 2. SATELLITE MAP & MESH ROUTING ---
-    const mapContainer = document.getElementById('mesh-map-container');
+    // FIX 1: Match the ID from your HTML
+    const mapContainer = document.getElementById('disaster-map');
     if (!mapContainer) return;
 
-    const meshMap = L.map('mesh-map-container').setView([20.5937, 78.9629], 5);
+    // Default Fallback Coordinates (Inavalu / VIT-AP) to prevent demo crashes
+    let userLat = 16.494;
+    let userLng = 80.498;
+
+    const meshMap = L.map('disaster-map').setView([userLat, userLng], 15);
 
     // Esri World Imagery (High-Res Satellite Tiles)
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
     }).addTo(meshMap);
+
+    // FIX 2: Force Leaflet to render inside the flexbox layout
+    setTimeout(() => {
+        meshMap.invalidateSize();
+    }, 500);
 
     const createPulseIcon = (color) => L.divIcon({
         className: 'mesh-node-icon',
@@ -535,69 +545,72 @@ document.addEventListener('DOMContentLoaded', () => {
         iconSize: [16, 16]
     });
 
+    // Create markers globally so we can update them if GPS is found
+    let gatewayMarker = L.marker([userLat + 0.003, userLng - 0.002], {icon: createPulseIcon('#2ea043')}).addTo(meshMap).bindPopup("<b>Rescue Base Camp</b><br>Active Cellular Uplink");
+    let relayMarker = L.marker([userLat + 0.001, userLng - 0.001], {icon: createPulseIcon('#d29922')}).addTo(meshMap).bindPopup("<b>Drone Repeater</b>");
+    let userMarker = L.marker([userLat, userLng], {icon: createPulseIcon('#f85149')}).addTo(meshMap).bindPopup("<b>Your Location</b>");
+    
+    let transmissionRoute = L.polyline([[userLat, userLng], [userLat + 0.001, userLng - 0.001], [userLat + 0.003, userLng - 0.002]], {
+        color: '#ff3e3e', weight: 3, dashArray: '8, 8', opacity: 0 
+    }).addTo(meshMap);
+
+    // Attempt to get Live GPS
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
+            userLat = position.coords.latitude;
+            userLng = position.coords.longitude;
 
-            meshMap.setView([userLat, userLng], 16); // Zoomed in closer for satellite view
+            meshMap.setView([userLat, userLng], 16);
 
-            const strandedUser = [userLat, userLng];
-            const relayNode1 = [userLat + 0.001, userLng - 0.001];
-            const activeGateway = [userLat + 0.003, userLng - 0.002];
+            // Update marker positions to live coordinates
+            userMarker.setLatLng([userLat, userLng]);
+            relayMarker.setLatLng([userLat + 0.001, userLng - 0.001]);
+            gatewayMarker.setLatLng([userLat + 0.003, userLng - 0.002]);
+            transmissionRoute.setLatLngs([[userLat, userLng], [userLat + 0.001, userLng - 0.001], [userLat + 0.003, userLng - 0.002]]);
+        }, () => {
+            console.log("GPS denied or delayed. Using Inavalu fallback coordinates.");
+        });
+    }
 
-            L.marker(activeGateway, {icon: createPulseIcon('#2ea043')}).addTo(meshMap).bindPopup("<b>Rescue Base Camp</b><br>Active Cellular Uplink");
-            L.marker(relayNode1, {icon: createPulseIcon('#d29922')}).addTo(meshMap).bindPopup("<b>Drone Repeater</b>");
-            L.marker(strandedUser, {icon: createPulseIcon('#f85149')}).addTo(meshMap).bindPopup("<b>Your Location</b>");
-
-            const transmissionRoute = L.polyline([strandedUser, relayNode1, activeGateway], {
-                color: '#ff3e3e', weight: 3, dashArray: '8, 8', opacity: 0 
-            }).addTo(meshMap);
-
-            // --- 3. NATIVE SMS DISPATCH ---
-            const simBtn = document.getElementById('simulate-sos-btn');
-            if(simBtn) {
-                simBtn.addEventListener('click', () => {
-                    const savedPhone = localStorage.getItem('atmosPhone');
-                    if(!savedPhone) {
-                        alert("Please register your device for emergency broadcasts first.");
-                        pendingSOS = true; 
-                        loginModal.style.display = 'flex';
-                        return;
-                    }
-
-                    // 1. The "Cliffhanger" Prompt intercepts the flow
-                    const userCondition = window.prompt("EMERGENCY MEDICAL STATUS:\nPlease type your current condition briefly (e.g., 'Trapped under rubble', 'Broken leg', 'Safe but stranded'):", "");
-                    
-                    // 2. Fallback logic: If they cancel or leave it blank, default to Unknown
-                    const finalCondition = userCondition ? userCondition.trim() : "Unknown/Unresponsive";
-
-                    simBtn.innerText = "Dispatching SOS via SMS Protocol...";
-                    simBtn.style.backgroundColor = "#ff3e3e";
-                    transmissionRoute.setStyle({ opacity: 1 });
-                    
-                    // 3. Compile the text message replacing randomized vitals with user input
-                    const emergencyNumbers = "112,100,108,1078"; 
-                    const emergencyText = `SOS ALERT: AtmosVision Mesh. Target Offline. Lat: ${userLat.toFixed(5)}, Lng: ${userLng.toFixed(5)}. Condition: ${finalCondition}. Registered Phone: ${savedPhone}. Requesting immediate extraction.`;
-                    
-                    setTimeout(() => {
-                        simBtn.innerText = "SMS Queued to Cellular Radio";
-                        
-                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                        if (isIOS) {
-                            window.location.href = `sms:${emergencyNumbers}&body=${encodeURIComponent(emergencyText)}`;
-                        } else {
-                            window.location.href = `sms:${emergencyNumbers}?body=${encodeURIComponent(emergencyText)}`;
-                        }
-
-                        setTimeout(() => {
-                            transmissionRoute.setStyle({ opacity: 0 });
-                            simBtn.innerText = "Initialize SOS Broadcast Simulation";
-                            simBtn.style.backgroundColor = "#1f6feb";
-                        }, 3000);
-                    }, 1000);
-                });
+    // --- 3. NATIVE SMS DISPATCH ---
+    // Moved OUTSIDE the geolocation block so the button ALWAYS works instantly
+    const simBtn = document.getElementById('simulate-sos-btn');
+    if(simBtn) {
+        simBtn.addEventListener('click', () => {
+            const savedPhone = localStorage.getItem('atmosPhone');
+            if(!savedPhone) {
+                alert("Please register your device for emergency broadcasts first.");
+                let loginModal = document.getElementById('login-modal');
+                if(loginModal) loginModal.style.display = 'flex';
+                return;
             }
+
+            const userCondition = window.prompt("EMERGENCY MEDICAL STATUS:\nPlease type your current condition briefly (e.g., 'Trapped under rubble', 'Broken leg', 'Safe but stranded'):", "");
+            const finalCondition = userCondition ? userCondition.trim() : "Unknown/Unresponsive";
+
+            simBtn.innerText = "Dispatching SOS via SMS Protocol...";
+            simBtn.style.backgroundColor = "#ff3e3e";
+            transmissionRoute.setStyle({ opacity: 1 });
+            
+            const emergencyNumbers = "112,100,108,1078"; 
+            const emergencyText = `SOS ALERT: AtmosVision Mesh. Target Offline. Lat: ${userLat.toFixed(5)}, Lng: ${userLng.toFixed(5)}. Condition: ${finalCondition}. Registered Phone: ${savedPhone}. Requesting immediate extraction.`;
+            
+            setTimeout(() => {
+                simBtn.innerText = "SMS Queued to Cellular Radio";
+                
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    window.location.href = `sms:${emergencyNumbers}&body=${encodeURIComponent(emergencyText)}`;
+                } else {
+                    window.location.href = `sms:${emergencyNumbers}?body=${encodeURIComponent(emergencyText)}`;
+                }
+
+                setTimeout(() => {
+                    transmissionRoute.setStyle({ opacity: 0 });
+                    simBtn.innerText = "Initialize SOS Broadcast Simulation";
+                    simBtn.style.backgroundColor = "#1f6feb";
+                }, 3000);
+            }, 1000);
         });
     }
 });
