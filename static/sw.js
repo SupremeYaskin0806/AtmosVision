@@ -1,4 +1,4 @@
-const CACHE_NAME = 'atmosvision-v1';
+const CACHE_NAME = 'atmosvision-v2';
 const offlineAssets = [
     '/',
     '/static/css/style.css',

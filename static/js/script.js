@@ -426,24 +426,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveLoginBtn = document.getElementById('save-login-btn');
     const closeLoginBtn = document.getElementById('close-login-btn');
     
+    // Grab the new inline mobile elements
+    const mobileEditBtn = document.getElementById('mobile-edit-btn');
+    const displayPhone = document.getElementById('display-registered-phone');
+    
     let pendingSOS = false; 
 
-    // Check on page load. If credentials exist, change button to Update Profile.
+    // Check on page load. If credentials exist, update both the navbar and the inline display.
     if (localStorage.getItem('atmosPhone')) {
         if(loginBtn) {
             loginBtn.innerText = "Update Profile";
             loginBtn.style.backgroundColor = "#2ea043";
         }
+        if(displayPhone) {
+            displayPhone.innerText = localStorage.getItem('atmosPhone');
+        }
     }
 
-    // Open Modal (Pre-fills existing data so the user can edit it)
-    if(loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            loginModal.style.display = 'flex';
-            document.getElementById('user-email').value = localStorage.getItem('atmosEmail') || '';
-            document.getElementById('user-phone').value = localStorage.getItem('atmosPhone') || '';
-        });
-    }
+    // Reusable function to open the modal and pre-fill existing data
+    const openLoginModal = () => {
+        loginModal.style.display = 'flex';
+        document.getElementById('user-email').value = localStorage.getItem('atmosEmail') || '';
+        document.getElementById('user-phone').value = localStorage.getItem('atmosPhone') || '';
+    };
+
+    // Bind the modal to both the navbar and the new mobile edit button
+    if(loginBtn) loginBtn.addEventListener('click', openLoginModal);
+    if(mobileEditBtn) mobileEditBtn.addEventListener('click', openLoginModal);
 
     // Close Modal
     closeLoginBtn.addEventListener('click', () => {
@@ -457,13 +466,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const phone = document.getElementById('user-phone').value;
         
         if(email && phone) {
-            // Overwrites old data with the newly entered data
+            // Overwrites the wrong number with the newly entered data
             localStorage.setItem('atmosEmail', email);
             localStorage.setItem('atmosPhone', phone);
             
+            // Update UI instantly
             if(loginBtn) {
                 loginBtn.innerText = "Update Profile";
                 loginBtn.style.backgroundColor = "#2ea043";
+            }
+            if(displayPhone) {
+                displayPhone.innerText = phone;
             }
             
             loginModal.style.display = 'none'; 
@@ -476,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert("Please enter both email and phone number.");
         }
-    }); 
+    });
     // Save Credentials & Auto-Return
     saveLoginBtn.addEventListener('click', () => {
         const email = document.getElementById('user-email').value;
