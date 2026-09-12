@@ -1,28 +1,39 @@
-const CACHE_NAME = 'atmosvision-v2';
-const offlineAssets = [
-    '/',
-    '/static/css/style.css',
-    '/static/js/script.js',
-    '/static/images/snow.jpg'
-];
+const CACHE_NAME = 'atmosvision-v3';
 
-// Install Event: Save files to the device
+// Install: Clear old caches instantly
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                return cache.addAll(offlineAssets);
-            })
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll([
+                '/',
+                '/static/css/style.css',
+                '/static/js/script.js'
+            ]);
+        })
     );
 });
 
-// Fetch Event: Load from device if internet is down
+// Activate: Delete any previous versions of the cache
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        return caches.delete(cache);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+// Fetch: Always try network first, fall back to cache if offline
 self.addEventListener('fetch', (event) => {
     event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Return cached version if offline, otherwise fetch from internet
-                return response || fetch(event.request);
-            })
+        fetch(event.request).catch(() => {
+            return caches.match(event.request);
+        })
     );
 });
