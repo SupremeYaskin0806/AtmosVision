@@ -142,32 +142,30 @@
     </section>
 
     <!-- AtmosVision Disaster Response Module -->
-    <section class="disaster-module">
+    <section class="disaster-section">
+    <div class="disaster-container">
         <div class="disaster-info">
             <h2>AtmosVision Disaster Mesh Routing</h2>
             <p>Severe weather events frequently disrupt cellular infrastructure. The AtmosVision Mesh Protocol is a fail-safe localized network that allows offline devices to bounce SOS telemetry device-to-device until an active rescue hub is reached.</p>
-        
+            
             <ul class="mesh-features">
                 <li><strong>Active Routing Logic:</strong> Low-latency ad-hoc packet forwarding utilizing simulated hardware-accelerated nodes.</li>
                 <li><strong>Development Roadmap:</strong> Autonomous UAV drone repeater deployment and AI-driven triage prioritization for rescue dispatch.</li>
             </ul>
-        
+            
+            <!-- Clean Inline Edit Credentials Card -->
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-left: 3px solid #2ea043; margin-bottom: 20px; border-radius: 5px;">
+                <p style="margin: 0; font-size: 0.9rem; color: #c9d1d9;">Registered Phone: <span id="display-registered-phone" style="color: #fff; font-weight: bold;">Not Registered</span></p>
+                <button id="mobile-edit-btn" style="margin-top: 10px; background: transparent; color: #58a6ff; border: 1px solid #58a6ff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: 0.2s;">Edit Credentials</button>
+            </div>
+            
             <button id="simulate-sos-btn" class="mesh-btn">Initialize SOS Broadcast Simulation</button>
-            <ul class="mesh-features">
-            <li><strong>Active Routing Logic:</strong> Low-latency ad-hoc packet forwarding utilizing simulated hardware-accelerated nodes.</li>
-            <li><strong>Development Roadmap:</strong> Autonomous UAV drone repeater deployment and AI-driven triage prioritization for rescue dispatch.</li>
-        </ul>
-        
-        <!-- NEW: Dedicated Mobile-Friendly Edit Section -->
-        <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-left: 3px solid #2ea043; margin-bottom: 20px; border-radius: 5px;">
-            <p style="margin: 0; font-size: 0.9rem; color: #c9d1d9;">Registered Phone: <span id="display-registered-phone" style="color: #fff; font-weight: bold;">Not Registered</span></p>
-            <button id="mobile-edit-btn" style="margin-top: 10px; background: transparent; color: #58a6ff; border: 1px solid #58a6ff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: 0.2s;">Edit Credentials</button>
         </div>
         
-        <button id="simulate-sos-btn" class="mesh-btn">Initialize SOS Broadcast Simulation</button>
+        <div class="disaster-map-wrapper">
+            <div id="disaster-map"></div>
         </div>
-    
-        <div id="mesh-map-container" class="mesh-map"></div>
+    </div>
     </section>
     <!-- LOGIN MODAL -->
     <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
