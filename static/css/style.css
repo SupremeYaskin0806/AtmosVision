@@ -363,3 +363,99 @@ body {
         margin-top: 10px;
     }
 }
+/* --- ATMOSVISION DISASTER MODULE --- */
+.disaster-module {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    padding: 40px 5%;
+    background-color: #1a1e23; /* Sleek dark UI */
+    color: #e6edf3;
+    margin: 40px auto;
+    border-radius: 12px;
+    max-width: 1200px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.disaster-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.disaster-info h2 {
+    color: #58a6ff;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.disaster-info p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #8b949e;
+    margin-bottom: 20px;
+}
+
+.mesh-features {
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+.mesh-features li {
+    margin-bottom: 15px;
+    padding-left: 20px;
+    position: relative;
+    font-size: 0.95rem;
+    color: #c9d1d9;
+}
+
+.mesh-features li::before {
+    content: "⚡";
+    position: absolute;
+    left: 0;
+    color: #58a6ff;
+}
+
+.mesh-features strong {
+    color: #ffffff;
+}
+
+.mesh-btn {
+    padding: 14px 24px;
+    background-color: #1f6feb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    align-self: flex-start;
+}
+
+.mesh-btn:hover {
+    background-color: #388bfd;
+    box-shadow: 0 0 15px rgba(56, 139, 253, 0.4);
+}
+
+.mesh-map {
+    flex: 1;
+    min-height: 400px;
+    border-radius: 10px;
+    border: 2px solid #30363d;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .disaster-module {
+        flex-direction: column;
+        margin: 20px 10px;
+        padding: 25px 15px;
+    }
+    .mesh-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

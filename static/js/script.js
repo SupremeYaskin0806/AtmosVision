@@ -417,3 +417,121 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+// --- ATMOSVISION DISASTER MODULE (SATELLITE & SMS DISPATCH) ---
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- 1. LOGIN SYSTEM (LOCAL STORAGE) ---
+    const loginBtn = document.getElementById('login-btn');
+    const loginModal = document.getElementById('login-modal');
+    const saveLoginBtn = document.getElementById('save-login-btn');
+    const closeLoginBtn = document.getElementById('close-login-btn');
+
+    // Open Modal
+    if(loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            loginModal.style.display = 'flex';
+            // Pre-fill if already logged in
+            document.getElementById('user-email').value = localStorage.getItem('atmosEmail') || '';
+            document.getElementById('user-phone').value = localStorage.getItem('atmosPhone') || '';
+        });
+    }
+
+    // Close Modal
+    closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
+
+    // Save Credentials
+    saveLoginBtn.addEventListener('click', () => {
+        const email = document.getElementById('user-email').value;
+        const phone = document.getElementById('user-phone').value;
+        if(email && phone) {
+            localStorage.setItem('atmosEmail', email);
+            localStorage.setItem('atmosPhone', phone);
+            loginBtn.innerText = "Logged In";
+            loginBtn.style.backgroundColor = "#2ea043";
+            loginModal.style.display = 'none';
+            alert("Credentials saved securely to device for offline access.");
+        } else {
+            alert("Please enter both email and phone number.");
+        }
+    });
+
+    // --- 2. SATELLITE MAP & MESH ROUTING ---
+    const mapContainer = document.getElementById('mesh-map-container');
+    if (!mapContainer) return;
+
+    const meshMap = L.map('mesh-map-container').setView([20.5937, 78.9629], 5);
+
+    // Esri World Imagery (High-Res Satellite Tiles)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    }).addTo(meshMap);
+
+    const createPulseIcon = (color) => L.divIcon({
+        className: 'mesh-node-icon',
+        html: `<div style="background-color:${color}; width:16px; height:16px; border-radius:50%; border:2px solid #fff; box-shadow: 0 0 12px ${color};"></div>`,
+        iconSize: [16, 16]
+    });
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+
+            meshMap.setView([userLat, userLng], 16); // Zoomed in closer for satellite view
+
+            const strandedUser = [userLat, userLng];
+            const relayNode1 = [userLat + 0.001, userLng - 0.001];
+            const activeGateway = [userLat + 0.003, userLng - 0.002];
+
+            L.marker(activeGateway, {icon: createPulseIcon('#2ea043')}).addTo(meshMap).bindPopup("<b>Rescue Base Camp</b><br>Active Cellular Uplink");
+            L.marker(relayNode1, {icon: createPulseIcon('#d29922')}).addTo(meshMap).bindPopup("<b>Drone Repeater</b>");
+            L.marker(strandedUser, {icon: createPulseIcon('#f85149')}).addTo(meshMap).bindPopup("<b>Your Location</b>");
+
+            const transmissionRoute = L.polyline([strandedUser, relayNode1, activeGateway], {
+                color: '#ff3e3e', weight: 3, dashArray: '8, 8', opacity: 0 
+            }).addTo(meshMap);
+
+            // --- 3. NATIVE SMS DISPATCH ---
+            const simBtn = document.getElementById('simulate-sos-btn');
+            if(simBtn) {
+                simBtn.addEventListener('click', () => {
+                    // Check if user is logged in
+                    const savedPhone = localStorage.getItem('atmosPhone');
+                    if(!savedPhone) {
+                        alert("ERROR: Please Login first to register your device for emergency broadcasts.");
+                        loginModal.style.display = 'flex';
+                        return;
+                    }
+
+                    // Visual Animation
+                    simBtn.innerText = "Dispatching SOS via SMS Protocol...";
+                    simBtn.style.backgroundColor = "#ff3e3e";
+                    transmissionRoute.setStyle({ opacity: 1 });
+                    
+                    // Compile the emergency text message
+                    const campPhoneNumber = "9337665718"; // <-- PUT YOUR TEST PHONE NUMBER HERE
+                    const emergencyText = `SOS ALERT: AtmosVision Mesh. Target Offline. Lat: ${userLat.toFixed(5)}, Lng: ${userLng.toFixed(5)}. Vitals: HR 115bpm, SpO2 89%. Registered Phone: ${savedPhone}. Requesting immediate extraction.`;
+                    
+                    setTimeout(() => {
+                        simBtn.innerText = "SMS Queued to Cellular Radio";
+                        
+                        // This forces the phone to open the native text messaging app with the data pre-filled
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                        if (isIOS) {
+                            window.location.href = `sms:${campPhoneNumber}&body=${encodeURIComponent(emergencyText)}`;
+                        } else {
+                            window.location.href = `sms:${campPhoneNumber}?body=${encodeURIComponent(emergencyText)}`;
+                        }
+
+                        // Reset UI
+                        setTimeout(() => {
+                            transmissionRoute.setStyle({ opacity: 0 });
+                            simBtn.innerText = "Initialize SOS Broadcast Simulation";
+                            simBtn.style.backgroundColor = "#1f6feb";
+                        }, 3000);
+                    }, 1000);
+                });
+            }
+        });
+    }
+});
