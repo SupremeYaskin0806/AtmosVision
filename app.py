@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import requests
 import json
 from groq import Groq
@@ -125,6 +125,13 @@ You MUST output a valid JSON object containing exactly these keys:
     except Exception as e:
         print(f"Map AI Error: {e}")
         return jsonify({'error': 'Failed to process spatial data.'}), 500
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json')
+
+@app.route('/sw.js')
+def service_worker():
+    return send_from_directory('static', 'sw.js') 
 
 if __name__ == '__main__':
     app.run(debug=True)

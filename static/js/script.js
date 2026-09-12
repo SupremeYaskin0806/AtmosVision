@@ -426,18 +426,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveLoginBtn = document.getElementById('save-login-btn');
     const closeLoginBtn = document.getElementById('close-login-btn');
     
-    // NEW: Tracks if we need to auto-send SOS after login
     let pendingSOS = false; 
 
-    // NEW: Check on page load. If credentials exist, remember them instantly.
+    // Check on page load. If credentials exist, change button to Update Profile.
     if (localStorage.getItem('atmosPhone')) {
         if(loginBtn) {
-            loginBtn.innerText = "Logged In";
+            loginBtn.innerText = "Update Profile";
             loginBtn.style.backgroundColor = "#2ea043";
         }
     }
 
-    // Open Modal
+    // Open Modal (Pre-fills existing data so the user can edit it)
     if(loginBtn) {
         loginBtn.addEventListener('click', () => {
             loginModal.style.display = 'flex';
@@ -452,6 +451,32 @@ document.addEventListener('DOMContentLoaded', () => {
         pendingSOS = false;
     });
 
+    // Save/Update Credentials
+    saveLoginBtn.addEventListener('click', () => {
+        const email = document.getElementById('user-email').value;
+        const phone = document.getElementById('user-phone').value;
+        
+        if(email && phone) {
+            // Overwrites old data with the newly entered data
+            localStorage.setItem('atmosEmail', email);
+            localStorage.setItem('atmosPhone', phone);
+            
+            if(loginBtn) {
+                loginBtn.innerText = "Update Profile";
+                loginBtn.style.backgroundColor = "#2ea043";
+            }
+            
+            loginModal.style.display = 'none'; 
+            alert("Credentials securely updated on device.");
+            
+            if (pendingSOS) {
+                pendingSOS = false;
+                document.getElementById('simulate-sos-btn').click();
+            }
+        } else {
+            alert("Please enter both email and phone number.");
+        }
+    }); 
     // Save Credentials & Auto-Return
     saveLoginBtn.addEventListener('click', () => {
         const email = document.getElementById('user-email').value;
@@ -520,29 +545,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const simBtn = document.getElementById('simulate-sos-btn');
             if(simBtn) {
                 simBtn.addEventListener('click', () => {
-                    // Check if user is logged in
                     const savedPhone = localStorage.getItem('atmosPhone');
                     if(!savedPhone) {
                         alert("Please register your device for emergency broadcasts first.");
-                        pendingSOS = true; // NEW: Tells the modal to fire SOS after saving
+                        pendingSOS = true; 
                         loginModal.style.display = 'flex';
                         return;
                     }
 
-                    // Visual Animation
+                    // 1. The "Cliffhanger" Prompt intercepts the flow
+                    const userCondition = window.prompt("EMERGENCY MEDICAL STATUS:\nPlease type your current condition briefly (e.g., 'Trapped under rubble', 'Broken leg', 'Safe but stranded'):", "");
+                    
+                    // 2. Fallback logic: If they cancel or leave it blank, default to Unknown
+                    const finalCondition = userCondition ? userCondition.trim() : "Unknown/Unresponsive";
+
                     simBtn.innerText = "Dispatching SOS via SMS Protocol...";
                     simBtn.style.backgroundColor = "#ff3e3e";
                     transmissionRoute.setStyle({ opacity: 1 });
                     
-                    // Compile the emergency text message
-                    // 112 (Universal), 100 (Police), 108 (Ambulance), 1078 (NDRF)
+                    // 3. Compile the text message replacing randomized vitals with user input
                     const emergencyNumbers = "112,100,108,1078"; 
-                    const emergencyText = `SOS ALERT: AtmosVision Mesh. Target Offline. Lat: ${userLat.toFixed(5)}, Lng: ${userLng.toFixed(5)}. Vitals: HR 115bpm, SpO2 89%. Registered Phone: ${savedPhone}. Requesting immediate extraction.`;
+                    const emergencyText = `SOS ALERT: AtmosVision Mesh. Target Offline. Lat: ${userLat.toFixed(5)}, Lng: ${userLng.toFixed(5)}. Condition: ${finalCondition}. Registered Phone: ${savedPhone}. Requesting immediate extraction.`;
                     
                     setTimeout(() => {
                         simBtn.innerText = "SMS Queued to Cellular Radio";
                         
-                        // Forces the phone to open the native text app addressed to all emergency services
                         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                         if (isIOS) {
                             window.location.href = `sms:${emergencyNumbers}&body=${encodeURIComponent(emergencyText)}`;
@@ -550,7 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.location.href = `sms:${emergencyNumbers}?body=${encodeURIComponent(emergencyText)}`;
                         }
 
-                        // Reset UI
                         setTimeout(() => {
                             transmissionRoute.setStyle({ opacity: 0 });
                             simBtn.innerText = "Initialize SOS Broadcast Simulation";
